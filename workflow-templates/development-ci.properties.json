@@ -1,0 +1,9 @@
+{
+    "name": "Development CI",
+    "description": "Development CI workflow to build and deploy code in INT k8s env",
+    "iconName": "example-icon",
+    "categories": [
+        "Docker",
+        "K8s"
+    ]
+}
