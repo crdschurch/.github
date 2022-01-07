@@ -1,0 +1,9 @@
+{
+    "name": ".Net 5 K8S DEMO Deploy",
+    "description": "Development CI workflow to build and deploy code in Demo k8s env",
+    "iconName": "Net5K8s-icon",
+    "categories": [
+        "Docker",
+        "K8s"
+    ]
+}
