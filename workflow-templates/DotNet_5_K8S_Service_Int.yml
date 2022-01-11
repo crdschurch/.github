@@ -73,8 +73,8 @@ jobs:
               "galleryEndpointUrl": "https://gallery.azure.com/",
               "managementEndpointUrl": "https://management.core.windows.net/"
             }'
-          cluster-name: aks-crds-int
-          resource-group: crds_int
+          cluster-name: ${{secrets.AKS_INT_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_INT_RESOURCE_GROUP}}
     
      
       - name: Create k8s secret

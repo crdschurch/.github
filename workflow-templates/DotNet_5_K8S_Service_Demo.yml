@@ -73,8 +73,8 @@ jobs:
               "galleryEndpointUrl": "https://gallery.azure.com/",
               "managementEndpointUrl": "https://management.core.windows.net/"
             }'
-          cluster-name: aks-crds-demo2
-          resource-group: crds_demo2
+          cluster-name: ${{secrets.AKS_DEMO_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_DEMO_RESOURCE_GROUP}}
     
      
       - name: Create k8s secret
