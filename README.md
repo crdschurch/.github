@@ -45,10 +45,15 @@ When you click the “Configure” button, github will take you to a page that w
 The current templates provided all require that your project contain certain files in specific places if they are going to work properly. These files are used to build docker containers and deploy the containers to K8S. Here is the list of files and locations (all are relative to location of your SLN file)
 
 /deployment/docker/docker-compose.yml		Used to pass config data to DockerFile
+
 /deployment/docker/dockerfile			Config steps for building your service
+
 /deployment/kubernetes/deployment.yml		Configs for K8s deployment
+
 /deployment/kubernetes/ingress.yml			Host URL info for K8s deployment
+
 /deployment/kubernetes/service.yml			Port configs for K8s deployment
+
 
 If you aren’t sure what these files are supposed to look like, you can get some samples in many of the crds-service-XXXX projects; for example crds-service-location. 
 
