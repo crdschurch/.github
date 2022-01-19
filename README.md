@@ -16,6 +16,7 @@ From there, scroll down to the bottom of the left hand menu and select “Secret
 You should see a list of pre-defined organization level secrets. These are used to store variables that shouldn’t change from project to project. You shouldn’t need to do anything with these variables, but if you do, please contact Devy first.
 
 Now, there are 2 repository level secrets that you will need to add to use the organizational templates we have created. You can do this by clicking the “New repository secret” button in the top right. The 2 secrets that need to be added are:
+
 **New_Relic_App_Name**
 This will be the name for your app in our monitoring system. The templates automatically suffix this value with environment, so all you need is a friendly name for your app. 
 Example “Location API”
