@@ -1,0 +1,8 @@
+{
+    "name": ".Net Nuget Build and Push",
+    "description": "Builds and pushes the master branch for a Nuget package type project",
+    "iconName": "Net5K8s-icon",
+    "categories": [
+        "Nuget"
+    ]
+}

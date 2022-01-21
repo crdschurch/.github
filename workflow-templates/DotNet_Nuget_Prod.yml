@@ -1,0 +1,35 @@
+name: PROD Build Workflow
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ASPNETCORE_ENVIRONMENT: prod
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build dotnet 
+        run: dotnet build ${{secrets.Project_Solution_Name}}.sln --configuration release --no-restore
+      
+      - name: Run Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+      
+      - name: Package nuget
+        run: dotnet pack ${{secrets.Project_Solution_Name}}.sln --configuration release -o:package
+          
+      - name: Push generated package to GitHub registry
+        run: dotnet nuget push "./package/*.nupkg" -s nuget.org -k ${{ secrets.NUGET_API_KEY }}
+      
+   
