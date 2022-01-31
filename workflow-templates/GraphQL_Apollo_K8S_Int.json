@@ -1,0 +1,10 @@
+{
+    "name": "Apollo GraphQL Subgraph k8S Deploy",
+    "description": "Development CI workflow to build and deploy Apollo Subgraph to INT k8s env",
+    "iconName": "GraphQL-icon",
+    "categories": [
+        "Docker",
+        "K8s",
+        "Apollo"
+    ]
+}
