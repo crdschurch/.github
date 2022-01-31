@@ -25,13 +25,13 @@ jobs:
         CRDS_MP_COMMON_CLIENT_ID: CRDS.Common
         CRDS_MP_COMMON_CLIENT_SECRET:  ${{secrets.CRDS_MP_COMMON_CLIENT_SECRET}}
         DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
-        NEW_RELIC_APP_NAME: crds-graphql-groups
+        NEW_RELIC_APP_NAME: ${{secrets.APP_NAME}} # ADD THIS AS A REPO SECRET i.e. crds-graphql-groups
         NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
         NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
 
-        REPO: crds-graphql-groups
-        GRAPH: groups
-        GRAPHQL_ENGINE_KEY: ${{secrets.GRAPHQL_ENGINE_KEY}}
+        REPO: ${{secrets.APP_NAME}}
+        GRAPH: ${{secrets.SUB_GRAPH_NAME} # ADD THIS AS A REPO SECRET i.e. crds-graphql-groups
+        GRAPHQL_ENGINE_KEY: ${{secrets.GRAPHQL_ENGINE_KEY}} # ADD THIS AS A REPO SECRET i.e groups
         PORT: 8002 #This is the localhost port that the graph runs on
         APOLLO_KEY: ${{secrets.APOLLO_KEY_INT}}
         
