@@ -62,14 +62,6 @@ Script files must live in the following folders (they are case sensative) \
 
 **Immutable** \
 Any script that you create must be runnable multiple times without breaking anything. The script sync process runs ALL of the scripts in the above folders everytime it is triggered. This is why your SP scripts must be "Create or Alter" and all of your data/structure changes should be wrapped in an IF that checks to see if the change has already been applied to the DB before running.  \
-Example:
----------------------------------------------------
-IF (NOT EXISTS(SELECT * FROM sysobjects WHERE Name = 'DB_SYNC_TEST_TABLE')) \
-BEGIN \
-	CREATE TABLE [dbo].[DB_SYNC_TEST_TABLE]( \
-	.... \
-END
----------------------------------------------------
 
 # Important Required Settings
 The current templates provided all require that your project contain certain files in specific places if they are going to work properly. These files are used to build docker containers and deploy the containers to K8S. Here is the list of files and locations (all are relative to location of your SLN file)
