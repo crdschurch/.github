@@ -40,6 +40,36 @@ When you click the “Configure” button, github will take you to a page that w
 ## Repeat the above step for other environments
 
 
+# Optional build steps
+
+## Database sync scripting
+If you would like to store DB change scripts in your repo, you can add the following GHA step to automatically run those scripts against different environments.
+
+-----------------------------------------------
+- name: Run SQL Scripts
+  uses: wei/curl@master
+  with:
+    args: 'https://api-int.crossroads.net/dbsync/sync/process?key=${{ secrets.DBSYNC_RUN_KEY }}&Repo=${{ github.event.repository.name }}&Env=${{ env.CRDS_ENV }}'
+----------------------------------------------- 
+	 
+For this feature to work, there are a few things you will need:
+**Folder structure**
+Script files must live in the following folders (they are case sensative)
+/deployment/DBScripts/MP/Data       (Any data insert/update/delete scripts)
+/deployment/DBScripts/MP/SPs	    (Stored procedure scripts, must be "CREATE OR ALTER XXXX")
+/deployment/DBScripts/MP/Structure  (Table/Field addition,removal, etc)
+
+**Scripts must be immutable**
+Any script that you create must be runnable multiple times without breaking anything. The script sync process runs **ALL** of the scripts in the above folders everytime it is triggered. This is why your SP scripts must be "Create or Alter" and all of your data/structure changes should be wrapped in an IF that checks to see if the change has already been applied to the DB before running. 
+Example:
+---------------------------------------------------
+IF (NOT EXISTS(SELECT * FROM sysobjects WHERE Name = 'DB_SYNC_TEST_TABLE'))
+BEGIN
+	CREATE TABLE [dbo].[DB_SYNC_TEST_TABLE](
+	....
+END
+---------------------------------------------------
+
 
 # Important Required Settings
 The current templates provided all require that your project contain certain files in specific places if they are going to work properly. These files are used to build docker containers and deploy the containers to K8S. Here is the list of files and locations (all are relative to location of your SLN file)
