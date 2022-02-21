@@ -60,7 +60,6 @@ Script files must live in the following folders (they are case sensative) \
 /deployment/DBScripts/MP/SPs	    (Stored procedure scripts, must be "CREATE OR ALTER XXXX") \
 /deployment/DBScripts/MP/Structure  (Table/Field addition,removal, etc)
 
-
 **Scripts must be immutable** \
 Any script that you create must be runnable multiple times without breaking anything. The script sync process runs **ALL** of the scripts in the above folders everytime it is triggered. This is why your SP scripts must be "Create or Alter" and all of your data/structure changes should be wrapped in an IF that checks to see if the change has already been applied to the DB before running.  \
 Example:
