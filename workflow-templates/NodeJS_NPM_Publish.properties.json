@@ -1,7 +1,7 @@
 {
     "name": "NodeJS NPM Package Deploy",
     "description": "Development CI workflow to build and publish NodeJS NPM packages",
-    "iconName": "NodeJS-icon",
+    "iconName": "nodejs-icon",
     "categories": [
         "Node",
         "NPM"
