@@ -1,10 +1,11 @@
-name: INT Build Workflow
+name: PROD Build Workflow
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - development
+      - master
+      - StandAloneGithubAction
     paths-ignore:
       - "**.md"
 
@@ -13,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AZURE_REGISTRY_NAME: crdsmlint5b5869c1
-      CRDS_ENV: int
+      CRDS_ENV: prod
       VAULT_URI: https://vault.crossroads.net:443
       VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
       VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
       DOCKER_TAG: ${{github.sha}}
-      ASPNETCORE_ENVIRONMENT: INT
-      MP_OAUTH_BASE_URL: https://adminint.crossroads.net/ministryplatformapi/oauth
-      MP_REST_API_ENDPOINT: https://adminint.crossroads.net/ministryplatformapi
+      ASPNETCORE_ENVIRONMENT: prod
+      MP_OAUTH_BASE_URL: https://admin.crossroads.net/ministryplatformapi/oauth
+      MP_REST_API_ENDPOINT: https://admin.crossroads.net/ministryplatformapi
       CRDS_MP_COMMON_CLIENT_ID: CRDS.Common
       CRDS_MP_COMMON_CLIENT_SECRET: ${{secrets.CRDS_MP_COMMON_CLIENT_SECRET}}
       DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
@@ -73,9 +74,9 @@ jobs:
         uses: azure/aks-set-context@v1
         with:
           creds: '{
-            "clientId": "${{secrets.AZURE_CLIENT_ID}}",
-            "clientSecret": "${{secrets.AZURE_CLIENT_SECRET}}",
-            "subscriptionId": "${{secrets.AZURE_SUBSCRIPTION_INT_DEMO}}",
+            "clientId": "${{secrets.AZURE_CLIENT_ID_PROD}}",
+            "clientSecret": "${{secrets.AZURE_CLIENT_SECRET_PROD}}",
+            "subscriptionId": "${{secrets.AZURE_SUBSCRIPTION_PROD}}",
             "tenantId": "${{secrets.AZURE_TENANT}}",
             "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
             "resourceManagerEndpointUrl": "https://management.azure.com/",
@@ -84,8 +85,8 @@ jobs:
             "galleryEndpointUrl": "https://gallery.azure.com/",
             "managementEndpointUrl": "https://management.core.windows.net/"
             }'
-          cluster-name: ${{secrets.AKS_INT_CLUSTER_NAME}}
-          resource-group: ${{secrets.AKS_INT_RESOURCE_GROUP}}
+          cluster-name: ${{secrets.AKS_PROD_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_PROD_RESOURCE_GROUP}}
 
       - name: Create k8s secret
         uses: azure/k8s-create-secret@v1
