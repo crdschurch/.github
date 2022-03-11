@@ -1,0 +1,131 @@
+name: PROD Build Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - StandAloneGithubAction
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_REGISTRY_NAME: crdsmlint5b5869c1
+      CRDS_ENV: prod
+      VAULT_URI: https://vault.crossroads.net:443
+      VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
+      VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
+      DOCKER_TAG: ${{github.sha}}
+      ASPNETCORE_ENVIRONMENT: prod
+      MP_OAUTH_BASE_URL: https://admin.crossroads.net/ministryplatformapi/oauth
+      MP_REST_API_ENDPOINT: https://admin.crossroads.net/ministryplatformapi
+      CRDS_MP_COMMON_CLIENT_ID: CRDS.Common
+      CRDS_MP_COMMON_CLIENT_SECRET: ${{secrets.CRDS_MP_COMMON_CLIENT_SECRET}}
+      DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
+      NEW_RELIC_APP_NAME: ${{github.event.repository.name}}
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
+      NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
+      REPO: ${{github.event.repository.name}}
+      GRAPH: ${{secrets.SUB_GRAPH_NAME} # ADD THIS AS A REPO SECRET i.e groups
+      GRAPHQL_ENGINE_KEY: ${{secrets.GRAPHQL_ENGINE_KEY}}
+      PORT: ${{secrets.SUB_GRAPH_PORT}} #This is the localhost port that the graph runs on, set as a REPO level secret
+      APOLLO_KEY: ${{secrets.APOLLO_KEY_INT}}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          username: ${{secrets.DOCKER_USERNAME}}
+          password: ${{secrets.DOCKER_PASSWORD}}
+
+      - name: Build image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: ./deployment/docker/Dockerfile
+          push: true
+          tags: crdschurch/${{env.REPO}}:${{env.DOCKER_TAG}}
+          cache-from: type=registry,ref=crdschurch/${{env.REPO}}:latest
+          cache-to: type=inline
+          build-args: |
+            GIT_ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}
+            VAULT_ROLE_ID=${{ env.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID=${{ env.VAULT_SECRET_ID }}
+            CRDS_ENV=${{ env.CRDS_ENV }}
+      - name: Connect to Azure
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{env.AZURE_REGISTRY_NAME}}.azurecr.io
+          username: ${{secrets.AZURE_USER}}
+          password: ${{secrets.AZURE_PASSWORD}}
+
+      - name: Set Azure context
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '{
+            "clientId": "${{secrets.AZURE_CLIENT_ID_PROD}}",
+            "clientSecret": "${{secrets.AZURE_CLIENT_SECRET_PROD}}",
+            "subscriptionId": "${{secrets.AZURE_SUBSCRIPTION_PROD}}",
+            "tenantId": "${{secrets.AZURE_TENANT}}",
+            "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+            "resourceManagerEndpointUrl": "https://management.azure.com/",
+            "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+            "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+            "galleryEndpointUrl": "https://gallery.azure.com/",
+            "managementEndpointUrl": "https://management.core.windows.net/"
+            }'
+          cluster-name: ${{secrets.AKS_PROD_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_PROD_RESOURCE_GROUP}}
+
+      - name: Create k8s secret
+        uses: azure/k8s-create-secret@v1
+        with:
+          namespace: "api"
+          secret-type: "generic"
+          arguments: --from-literal=DOCKER_TAG=${{env.DOCKER_TAG}}
+            --from-literal=VAULT_ROLE_ID=${{env.VAULT_ROLE_ID}}
+            --from-literal=VAULT_SECRET_ID=${{env.VAULT_SECRET_ID}}
+            --from-literal=ASPNETCORE_ENVIRONMENT=${{env.ASPNETCORE_ENVIRONMENT}}
+            --from-literal=CRDS_ENV=${{env.CRDS_ENV}}
+          secret-name: ${{env.DOCKER_IMAGE_SECRET}}
+
+      - name: Find and Replace - ASPNETCORE_ENVIRONMENT
+        run: sed -i 's/$ASPNETCORE_ENVIRONMENT/${{env.ASPNETCORE_ENVIRONMENT}}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - VAULT_ROLE_ID
+        run: sed -i 's/$VAULT_ROLE_ID/${{env.VAULT_ROLE_ID}}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - VAULT_SECRET_ID
+        run: sed -i 's/$VAULT_SECRET_ID/${{env.VAULT_SECRET_ID}}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - CRDS_ENV
+        run: sed -i 's/$CRDS_ENV/${{env.CRDS_ENV}}/g' ./deployment/kubernetes/deployment.yml;
+
+      - name: Deploy to K8S
+        uses: azure/k8s-deploy@v1
+        with:
+          manifests: |
+            ./deployment/kubernetes/deployment.yml
+            ./deployment/kubernetes/service.yml
+          images: "crdschurch/${{env.REPO}}:${{env.DOCKER_TAG}}"
+          imagepullsecrets: ${{env.DOCKER_IMAGE_SECRET}}
+          namespace: api
+
+      - name: Install Rover
+        run: |
+          curl -sSL https://rover.apollo.dev/nix/v0.1.0 | sh
+          echo "$HOME/.rover/bin" >> $GITHUB_PATH
+      - name: Run Docker Container Locally To Run Rover against
+        run: |
+          docker run --name graphql-${{env.GRAPH}} --publish ${{env.PORT}}:${{env.PORT}} --detach crdschurch/crds-graphql-${{env.GRAPH}}:${{env.DOCKER_TAG}}
+          sleep 30
+          curl --request POST --header 'content-type: application/json' --url http://localhost:${{env.PORT}}/ --data '{"query":"query { __typename }"}'
+          rover subgraph introspect http://localhost:${{env.PORT}} | rover subgraph publish crds-graphql@${{secrets.GRAPHQL_ENGINE_VARIANT_INT}} --name ${{env.GRAPH}} --routing-url http://crds-graphql-${{env.GRAPH}} --schema -

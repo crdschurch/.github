@@ -1,0 +1,133 @@
+name: Run Cypress Tests
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [development]
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    env:
+      CRDS_ENV: int
+      VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
+      VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
+      DOCKER_TAG: ${{github.sha}}
+      REPO: ${{github.event.repository.name}}
+      #Two below secrets are specific to a graphql sub graph
+      GRAPH: ${{secrets.SUB_GRAPH_NAME}
+      PORT: ${{secrets.SUB_GRAPH_PORT}}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker Graphql Layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-graphql
+          key: ${{ runner.os }}-buildx-graphql
+          restore-keys: |
+            ${{ runner.os }}-buildx-graphql
+      - name: Build Graphql Subgraph Image
+        id: docker_graphql_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: ./deployment/docker/Dockerfile
+          push: false
+          load: true
+          tags: graphql
+          cache-from: type=local,src=/tmp/.buildx-cache-graphql
+          cache-to: type=local,dest=/tmp/.buildx-cache-graphql
+          build-args: |
+            GIT_ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}
+            VAULT_ROLE_ID=${{ env.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID=${{ env.VAULT_SECRET_ID }}
+            CRDS_ENV=${{ env.CRDS_ENV }}
+            PORT=${{ env.PORT }}
+      - name: Cache Docker Graphql Gateway Layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-graphql-gateway
+          key: ${{ runner.os }}-buildx-graphql-gateway
+          restore-keys: |
+            ${{ runner.os }}-buildx-graphql-gateway
+      - name: Build Graphql Gateway Image
+        id: docker_graphql_gateway_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: ./deployment/docker/testing-gateway.Dockerfile
+          push: false
+          load: true
+          tags: graphql-gateway
+          cache-from: type=local,src=/tmp/.buildx-cache-graphql-gateway
+          cache-to: type=local,dest=/tmp/.buildx-cache-graphql-gateway
+          build-args: |
+            GIT_ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}
+            VAULT_ROLE_ID=${{ env.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID=${{ env.VAULT_SECRET_ID }}
+            CRDS_ENV=${{ env.CRDS_ENV }}
+      - name: Cache Docker Cypress Layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-cypress
+          key: ${{ runner.os }}-buildx-cypress
+          restore-keys: |
+            ${{ runner.os }}-buildx-cypress
+      - name: Build Cypress Image
+        id: docker_cypress_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: ./deployment/docker/cypress.Dockerfile
+          push: false
+          load: true
+          tags: cypress
+          cache-from: type=local,src=/tmp/.buildx-cache-cypress
+          cache-to: type=local,dest=/tmp/.buildx-cache-cypress
+          build-args: |
+            VAULT_ROLE_ID=${{ env.VAULT_ROLE_ID }}
+            VAULT_SECRET_ID=${{ env.VAULT_SECRET_ID }}
+            CRDS_ENV=${{ env.CRDS_ENV }}
+      - name: Create local docker network
+        run: docker network create graphql-test
+
+      - name: Run graphql subgraph container so we can test against it
+        run: |
+          docker run -p ${{env.PORT}}:${{env.PORT}} --net graphql-test --name graphql -d graphql         
+          sleep 15
+      - name: Run graphql gateway container so we can test against it
+        run: |
+          docker run -p 8000:8000 --net graphql-test --name graphql-gateway -d graphql-gateway         
+          sleep 15
+      - name: Run cypress container to run tests
+        run: docker run --net graphql-test --name cypress --rm cypress
+
+      - name: Tests passed
+        if: ${{ success() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_USERNAME: Cypress Test Results
+          SLACK_WEBHOOK: ${{ secrets.CYPRESS_SLACK_WEBHOOK }}
+          SLACK_COLOR: good
+          SLACK_TITLE: ${{github.event.repository.name}}
+          SLACK_MESSAGE: "cypress tests PASSED"
+          SLACK_ICON: https://www.cypress.io/icons/icon-48x48.png?v=90213ca87017074111a88470199bc242315d18c5
+
+      - name: Tests failed
+        if: ${{ failure() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_USERNAME: Cypress Test Results
+          SLACK_WEBHOOK: ${{ secrets.CYPRESS_SLACK_WEBHOOK }}
+          SLACK_COLOR: "#FF0000"
+          SLACK_TITLE: ${{github.event.repository.name}}
+          SLACK_MESSAGE: "cypress tests FAILED"
+          SLACK_ICON: https://www.cypress.io/icons/icon-48x48.png?v=90213ca87017074111a88470199bc242315d18c5

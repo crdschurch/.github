@@ -1,0 +1,10 @@
+{
+    "name": "Rover CLI Subgraph k8S Deploy",
+    "description": "Prod CI workflow to build and deploy Apollo Subgraph to PROD k8s env using rover CLI",
+    "iconName": "GraphQL-icon",
+    "categories": [
+        "Docker",
+        "K8s",
+        "Rover"
+    ]
+}

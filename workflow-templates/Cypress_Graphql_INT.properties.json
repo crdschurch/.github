@@ -1,0 +1,10 @@
+{
+    "name": "Cypress Graphql",
+    "description": "Workflow to automate cypress test when changes are merged into INT. Test run against docker containers of Graphql gate way, and the sub graph being tested",
+    "iconName": "GraphQL-icon",
+    "categories": [
+        "Docker",
+        "Cypress",
+        "Graphql"
+    ]
+}
