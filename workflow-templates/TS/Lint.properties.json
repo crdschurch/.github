@@ -1,0 +1,8 @@
+{
+  "name": "Typescript Linter",
+  "description": "Workflow to run ESLint on TS repos for checking code standards and rules.",
+  "iconName": "Lint-icon",
+  "categories": [
+      "TypeScript"
+  ]
+}
