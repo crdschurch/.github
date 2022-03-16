@@ -1,10 +1,6 @@
 {
-    "name": "Apollo GraphQL Subgraph k8S Deploy",
-    "description": "Prod CI workflow to build and deploy Apollo Subgraph to PROD k8s env",
-    "iconName": "GraphQL-icon",
-    "categories": [
-        "Docker",
-        "K8s",
-        "Apollo"
-    ]
+  "name": "Apollo GraphQL Subgraph k8S Deploy (deprecated)",
+  "description": "Prod CI workflow to build and deploy Apollo Subgraph to PROD k8s env",
+  "iconName": "GraphQL-icon",
+  "categories": ["Docker", "K8s", "Apollo"]
 }
