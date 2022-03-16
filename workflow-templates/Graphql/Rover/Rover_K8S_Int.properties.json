@@ -1,5 +1,5 @@
 {
-    "name": "Rover CLI Subgraph k8S Deploy",
+    "name": "Rover CLI Subgraph k8S Int Deploy",
     "description": "Int CI workflow to build and deploy Apollo Subgraph to Int k8s env using rover CLI",
     "iconName": "GraphQL-icon",
     "categories": [
