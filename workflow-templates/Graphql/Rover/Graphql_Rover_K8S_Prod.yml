@@ -128,4 +128,4 @@ jobs:
           docker run --name graphql-${{env.GRAPH}} --publish ${{env.PORT}}:${{env.PORT}} --detach crdschurch/crds-graphql-${{env.GRAPH}}:${{env.DOCKER_TAG}}
           sleep 30
           curl --request POST --header 'content-type: application/json' --url http://localhost:${{env.PORT}}/ --data '{"query":"query { __typename }"}'
-          rover subgraph introspect http://localhost:${{env.PORT}} | rover subgraph publish crds-graphql@${{secrets.GRAPHQL_ENGINE_VARIANT_INT}} --name ${{env.GRAPH}} --routing-url http://crds-graphql-${{env.GRAPH}} --schema -
+          rover subgraph introspect http://localhost:${{env.PORT}} | rover subgraph publish crds-graphql@${{secrets.GRAPHQL_ENGINE_VARIANT_PROD}} --name ${{env.GRAPH}} --routing-url http://crds-graphql-${{env.GRAPH}} --schema -
