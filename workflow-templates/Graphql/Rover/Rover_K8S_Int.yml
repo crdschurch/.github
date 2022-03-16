@@ -27,7 +27,7 @@ jobs:
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
       NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
       REPO: ${{github.event.repository.name}}
-      GRAPH: ${{secrets.SUB_GRAPH_NAME} # ADD THIS AS A REPO SECRET i.e groups
+      GRAPH: ${{secrets.SUB_GRAPH_NAME}} # ADD THIS AS A REPO SECRET i.e groups
       GRAPHQL_ENGINE_KEY: ${{secrets.GRAPHQL_ENGINE_KEY}}
       PORT: ${{secrets.SUB_GRAPH_PORT}} #This is the localhost port that the graph runs on, set as a REPO level secret
       APOLLO_KEY: ${{secrets.APOLLO_KEY_INT}}
