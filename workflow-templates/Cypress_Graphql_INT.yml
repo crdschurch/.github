@@ -14,7 +14,7 @@ jobs:
       DOCKER_TAG: ${{github.sha}}
       REPO: ${{github.event.repository.name}}
       #Two below secrets are specific to a graphql sub graph
-      GRAPH: ${{secrets.SUB_GRAPH_NAME}
+      GRAPH: ${{secrets.SUB_GRAPH_NAME}}
       PORT: ${{secrets.SUB_GRAPH_PORT}}
 
     steps:
