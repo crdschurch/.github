@@ -16,7 +16,7 @@ jobs:
         VAULT_URI: https://vault.crossroads.net:443
         VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
         VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
-        DOCKER_TAG: ${{ github.sha }}
+        DOCKER_TAG: ${{ github.ref_name }}.${{ github.run_number }}
         ASPNETCORE_ENVIRONMENT: prod
         MP_OAUTH_BASE_URL: https://admin.crossroads.net/ministryplatformapi/oauth
         MP_REST_API_ENDPOINT: https://admin.crossroads.net/ministryplatformapi

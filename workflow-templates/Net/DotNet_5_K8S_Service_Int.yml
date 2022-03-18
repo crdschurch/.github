@@ -1,9 +1,9 @@
-name: DEMO Build Workflow
+name: INT Build Workflow
 
 on:
   push:
     branches:
-      - demo
+      - development
     paths-ignore:
       - '**.md'
 
@@ -12,19 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     env: 
         AZURE_REGISTRY_NAME: crdsmlint5b5869c1
-        CRDS_ENV: demo
+        CRDS_ENV: int
         VAULT_URI: https://vault.crossroads.net:443
         VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
         VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
-        DOCKER_TAG: ${{ github.sha }}
-        ASPNETCORE_ENVIRONMENT: DEMO
-        MP_OAUTH_BASE_URL: https://admindemo.crossroads.net/ministryplatformapi/oauth
-        MP_REST_API_ENDPOINT: https://admindemo.crossroads.net/ministryplatformapi
+        DOCKER_TAG: ${{ github.ref_name }}.${{ github.run_number }}
+        ASPNETCORE_ENVIRONMENT: INT
+        MP_OAUTH_BASE_URL: https://adminint.crossroads.net/ministryplatformapi/oauth
+        MP_REST_API_ENDPOINT: https://adminint.crossroads.net/ministryplatformapi
         CRDS_MP_COMMON_CLIENT_ID: CRDS.Common
         CRDS_MP_COMMON_CLIENT_SECRET:  ${{secrets.CRDS_MP_COMMON_CLIENT_SECRET}}
         DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
-        API_HOST_NAME: api-demo.crossroads.net
-        NEW_RELIC_APP_NAME: ${{secrets.New_Relic_App_Name}} Demo
+        API_HOST_NAME: api-int.crossroads.net
+        NEW_RELIC_APP_NAME: ${{secrets.New_Relic_App_Name}} INT
         NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
         NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
         
@@ -73,8 +73,8 @@ jobs:
               "galleryEndpointUrl": "https://gallery.azure.com/",
               "managementEndpointUrl": "https://management.core.windows.net/"
             }'
-          cluster-name: ${{secrets.AKS_DEMO_CLUSTER_NAME}}
-          resource-group: ${{secrets.AKS_DEMO_RESOURCE_GROUP}}
+          cluster-name: ${{secrets.AKS_INT_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_INT_RESOURCE_GROUP}}
     
      
       - name: Create k8s secret
@@ -89,7 +89,6 @@ jobs:
             --from-literal=CRDS_ENV=${{ env.CRDS_ENV }}
           secret-name: ${{ env.DOCKER_IMAGE_SECRET }}
         
-   
       - name: Find and Replace - ASPNETCORE_ENVIRONMENT
         run: sed -i 's/$ASPNETCORE_ENVIRONMENT/${{ env.ASPNETCORE_ENVIRONMENT }}/g' ./deployment/kubernetes/deployment.yml;  
       - name: Find and Replace - VAULT_ROLE_ID
@@ -107,7 +106,6 @@ jobs:
       - name: Find and Replace - API_HOST_NAME
         run: sed -i 's/$API_HOST_NAME/${{ env.API_HOST_NAME }}/g' ./deployment/kubernetes/ingress.yml;
         
-      
       - name: Deploy to K8S
         uses: azure/k8s-deploy@v1
         with:
@@ -120,6 +118,8 @@ jobs:
           namespace: api
 
 
+
+      
       
   
 
