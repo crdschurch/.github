@@ -32,12 +32,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       
-      - name: Setup NuGet
-        uses: nuget/setup-nuget@v1.0.5
-        with:
-          nuget-version: '5.x'
-      - run: nuget restore ${{secrets.Project_Solution_Name}}.sln
-      
       - name: Build container image
         run: docker-compose -f ./deployment/docker/docker-compose.yml build
 
