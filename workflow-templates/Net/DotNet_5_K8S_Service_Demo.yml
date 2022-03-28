@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: Demo
     env: 
         AZURE_REGISTRY_NAME: crdsmlint5b5869c1
         CRDS_ENV: demo
