@@ -27,6 +27,18 @@ This needs to be the name of your solution file MINUS the .sln and should exactl
 This value will be used for building the correct solution file AND for naming the docker containers that are created and used during the build process.
 Example “crds-service-location”
 
+You may also use environment specific secrets; you would use these for secrets that change between int/demo/prod. To set this up:
+
+Goto Settings, then "Environments"
+
+Create any of the environments that you need. Make sure to name name "Development", "Demo", "Production". These are case sensative, and will need to match the values in your build files.
+
+After you have created your environments, add the secret to each of them, making sure to keep the secret name the same; only change the value as needed.
+
+In your build files, name sure that you have a line that looks like "environment: Development" in line with your runs-on and env attributes. Make sure that the value matches the names you created for your environments.
+
+That's it. Now when you use those environment level secrets, they will pull from the paired secrets you created.
+
 ## Set up Actions
 Next we will add the actual github actions that will build and deploy your application. To get to this screen, use the “Actions” toolbar option
 
