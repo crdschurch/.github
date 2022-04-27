@@ -1,0 +1,42 @@
+name: AKS_INT_DEPLOYMENT
+
+on:
+  push:
+    branches:
+      - development
+    paths-ignore:
+      - '**.md'
+  workflow-dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_TAG: ${{ github.ref_name }}.${{ github.run_number }}
+    name: Crossroads Custom Deployment Action
+    steps:
+      - uses: actions/checkout@v3
+      - id: foo
+        uses: crdschurch/crds-github-actions/DockerBuild_K8s_Deployment@master
+        with:
+          SOLUTION_NAME: ${{ secrets.Project_Solution_Name}} 
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_TAG: ${{env.DOCKER_TAG}}
+          VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
+          VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
+          CRDS_ENV: int
+          AZURE_REGISTRY_NAME: crdsmlint5b5869c1
+          AZURE_USER: ${{ secrets.AZURE_USER }} 
+          AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_INT_DEMO: ${{ secrets.AZURE_SUBSCRIPTION_INT_DEMO }}
+          AZURE_TENANT: ${{ secrets.AZURE_TENANT }}
+          AKS_INT_CLUSTER_NAME: ${{secrets.AKS_INT_CLUSTER_NAME}}
+          AKS_INT_RESOURCE_GROUP: ${{secrets.AKS_INT_RESOURCE_GROUP}}
+          DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
+          API_HOST_NAME: api-int.crossroads.net
+          NEW_RELIC_APP_NAME: ${{secrets.New_Relic_App_Name}} INT
+          NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
+          NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}

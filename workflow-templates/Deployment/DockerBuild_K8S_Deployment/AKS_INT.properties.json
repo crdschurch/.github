@@ -1,0 +1,9 @@
+{
+    "name": "AKS INT Deploy",
+    "description": "Development CI workflow to build and deploy code in INT k8s env",
+    "iconName": "Net5K8s-icon",
+    "categories": [
+        "Docker",
+        "K8s"
+    ]
+}
