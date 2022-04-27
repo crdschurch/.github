@@ -36,7 +36,6 @@ jobs:
           AKS_INT_CLUSTER_NAME: ${{secrets.AKS_INT_CLUSTER_NAME}}
           AKS_INT_RESOURCE_GROUP: ${{secrets.AKS_INT_RESOURCE_GROUP}}
           DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
-          API_HOST_NAME: api-int.crossroads.net
           NEW_RELIC_APP_NAME: ${{secrets.New_Relic_App_Name}} INT
           NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
           NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
