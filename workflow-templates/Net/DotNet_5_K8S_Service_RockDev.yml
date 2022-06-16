@@ -1,0 +1,119 @@
+name: Rock Dev Build Workflow
+
+on:
+  push:
+    branches:
+      - rockdev
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Development
+    env: 
+        AZURE_REGISTRY_NAME: crdsmlint5b5869c1
+        CRDS_ENV: RockDev
+        VAULT_URI: https://vault.crossroads.net:443
+        VAULT_ROLE_ID: ${{secrets.VAULT_ROLE_ID}}
+        VAULT_SECRET_ID: ${{secrets.VAULT_SECRET_ID}}
+        DOCKER_TAG: ${{ github.ref_name }}.${{ github.run_number }}
+        ASPNETCORE_ENVIRONMENT: RockDev
+        CRDS_MP_COMMON_CLIENT_ID: CRDS.Common
+        CRDS_MP_COMMON_CLIENT_SECRET:  ${{secrets.CRDS_MP_COMMON_CLIENT_SECRET}}
+        DOCKER_IMAGE_SECRET: some-value-that-nobody-should-know-487374
+        API_HOST_NAME: api-rockdev.crossroads.net
+        NEW_RELIC_APP_NAME: ${{secrets.New_Relic_App_Name}} RockDev
+        NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: true
+        NEW_RELIC_LICENSE_KEY: ${{secrets.NEW_RELIC_LICENSE_KEY}}
+        
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build container image
+        run: docker-compose -f ./deployment/docker/docker-compose.yml build
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        
+      - name: Push docker image to azure
+        run: docker push crdschurch/${{secrets.Project_Solution_Name}}:${{ env.DOCKER_TAG }}
+
+
+      - name: Connect to Azure
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.AZURE_REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_USER }} 
+          password: ${{ secrets.AZURE_PASSWORD }}
+          
+      - name: Set Azure context
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '{
+              "clientId": "${{secrets.AZURE_CLIENT_ID}}",
+              "clientSecret": "${{secrets.AZURE_CLIENT_SECRET}}",
+              "subscriptionId": "${{secrets.AZURE_SUBSCRIPTION_INT_DEMO}}",
+              "tenantId": "${{secrets.AZURE_TENANT}}",
+              "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+              "resourceManagerEndpointUrl": "https://management.azure.com/",
+              "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+              "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+              "galleryEndpointUrl": "https://gallery.azure.com/",
+              "managementEndpointUrl": "https://management.core.windows.net/"
+            }'
+          cluster-name: ${{secrets.AKS_INT_CLUSTER_NAME}}
+          resource-group: ${{secrets.AKS_INT_RESOURCE_GROUP}}
+    
+     
+      - name: Create k8s secret
+        uses: azure/k8s-create-secret@v1
+        with:
+          namespace: 'api'
+          secret-type: 'generic'
+          arguments: --from-literal=DOCKER_TAG=${{ env.DOCKER_TAG }}
+            --from-literal=VAULT_ROLE_ID=${{ secrets.VAULT_ROLE_ID }}
+            --from-literal=VAULT_SECRET_ID=${{ secrets.VAULT_SECRET_ID }}
+            --from-literal=ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
+            --from-literal=CRDS_ENV=${{ env.CRDS_ENV }}
+          secret-name: ${{ env.DOCKER_IMAGE_SECRET }}
+        
+      - name: Find and Replace - ASPNETCORE_ENVIRONMENT
+        run: sed -i 's/$ASPNETCORE_ENVIRONMENT/${{ env.ASPNETCORE_ENVIRONMENT }}/g' ./deployment/kubernetes/deployment.yml;  
+      - name: Find and Replace - VAULT_ROLE_ID
+        run: sed -i 's/$VAULT_ROLE_ID/${{ secrets.VAULT_ROLE_ID }}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - VAULT_SECRET_ID
+        run: sed -i 's/$VAULT_SECRET_ID/${{ secrets.VAULT_SECRET_ID }}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - CRDS_ENV
+        run: sed -i 's/$CRDS_ENV/${{ env.CRDS_ENV }}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - NEW_RELIC_APP_NAME
+        run: sed -i 's/$NEW_RELIC_APP_NAME/${{ env.NEW_RELIC_APP_NAME }}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+        run: sed -i 's/$NEW_RELIC_DISTRIBUTED_TRACING_ENABLED/"${{ env.NEW_RELIC_DISTRIBUTED_TRACING_ENABLED }}"/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - NEW_RELIC_LICENSE_KEY
+        run: sed -i 's/$NEW_RELIC_LICENSE_KEY/${{ env.NEW_RELIC_LICENSE_KEY }}/g' ./deployment/kubernetes/deployment.yml;
+      - name: Find and Replace - API_HOST_NAME
+        run: sed -i 's/$API_HOST_NAME/${{ env.API_HOST_NAME }}/g' ./deployment/kubernetes/ingress.yml;
+        
+      - name: Deploy to K8S
+        uses: azure/k8s-deploy@v1
+        with:
+          manifests: |
+            ./deployment/kubernetes/deployment.yml
+            ./deployment/kubernetes/service.yml
+            ./deployment/kubernetes/ingress.yml
+          images: "crdschurch/${{secrets.Project_Solution_Name}}:${{ env.DOCKER_TAG }}"
+          imagepullsecrets: ${{ env.DOCKER_IMAGE_SECRET }}
+          namespace: api
+
+
+
+      
+      
+  
+
+  
